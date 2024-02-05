@@ -1,4 +1,7 @@
 module StudentLoan (calculateStudentLoan) where
 
+threshold :: Int
+threshold = 27295
+
 calculateStudentLoan :: Int -> Double
-calculateStudentLoan x = if x > 27295 then fromIntegral (x - 27295) * 0.09 else 0
+calculateStudentLoan income = if income > threshold then fromIntegral (income - threshold) * 0.09 else 0
