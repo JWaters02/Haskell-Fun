@@ -1,4 +1,4 @@
 module NITax (calculateNITax) where
 
-calculateNITax :: Int -> Int
+calculateNITax :: Int -> Double
 calculateNITax x = 0

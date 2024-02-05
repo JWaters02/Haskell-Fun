@@ -23,7 +23,11 @@ studentLoanTests = TestList [
     ]
 
 niTaxTests :: Test
-niTaxTests = TestList []
+niTaxTests = TestList [
+    TestCase (assertEqual "NI tax below threshold" 0 (calculateNITax 8000)),
+    TestCase (assertEqual "NI tax at middle threshold" 852.84 (calculateNITax 20000)),
+    TestCase (assertEqual "NI tax above threshold" 4529.82 (calculateNITax 60000))
+    ]
 
 incomeTaxTests :: Test
 incomeTaxTests = TestList []
