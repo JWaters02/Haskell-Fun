@@ -1,5 +1,6 @@
 import Test.HUnit
 
+import CalculateNetIncome
 import IncomeTax
 import NITax
 import StudentLoan
@@ -11,10 +12,22 @@ main = do
 
 allTests :: Test
 allTests = TestList [
+    calculateNetIncomeTests,
     niTaxTests,
     incomeTaxTests,
     studentLoanTests,
-    personalAllowanceTests
+    personalAllowanceTests,
+    taxableIncomeTests
+    ]
+
+calculateNetIncomeTests :: Test
+calculateNetIncomeTests = TestList [
+    TestCase (assertEqual "Net income zero" 0 (calculateNetIncome 0)),
+    TestCase (assertEqual "Net income basic rate below threshold" 10000 (calculateNetIncome 10000)),
+    TestCase (assertEqual "Net income basic rate betweem thresholds" 21086.16 (calculateNetIncome 25000)),
+    TestCase (assertEqual "Net income higher rate between thresholds" 30217.71 (calculateNetIncome 40000)),
+    TestCase (assertEqual "Net income higher rate above threshold" 41094.73 (calculateNetIncome 60000)),
+    TestCase (assertEqual "Net income additional rate above threshold" 100923.73 (calculateNetIncome 200000))
     ]
 
 studentLoanTests :: Test
