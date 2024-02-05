@@ -1,10 +1,34 @@
 module IncomeTax (calculateIncomeTax, calculatePersonalAllowance, calculateTaxableIncome) where
 
+fullPersonalAllowance :: Int
+fullPersonalAllowance = 12570
+
+incomeReductionStart :: Int
+incomeReductionStart = 100000
+
+personalAllowanceReductionRate :: Float
+personalAllowanceReductionRate = 0.5
+
+basicRateUpperLimit :: Int
+basicRateUpperLimit = 37700
+
+higherRateUpperLimit :: Int
+higherRateUpperLimit = 125140
+
+basicTaxRate :: Float
+basicTaxRate = 0.2
+
+higherTaxRate :: Float
+higherTaxRate = 0.4
+
+additionalTaxRate :: Float
+additionalTaxRate = 0.45
+
 calculatePersonalAllowance :: Int -> Float
 calculatePersonalAllowance x = 
-    if x > 100000
-        then max 0 (12570 - fromIntegral (x - 100000) * 0.5)
-        else 12570
+    if x > incomeReductionStart
+        then max 0 (fromIntegral fullPersonalAllowance - fromIntegral (x - incomeReductionStart) * personalAllowanceReductionRate)
+        else fromIntegral fullPersonalAllowance
 
 calculateTaxableIncome :: Int -> Int
 calculateTaxableIncome x = 
@@ -13,8 +37,11 @@ calculateTaxableIncome x =
 calculateIncomeTax :: Int -> Float
 calculateIncomeTax x = 
     let taxableIncome = calculateTaxableIncome x
-    in if taxableIncome <= 37700 
-        then fromIntegral taxableIncome * 0.2
-        else if taxableIncome <= 125140
-            then (37700 * 0.2) + (fromIntegral (taxableIncome - 37700) * 0.4)
-            else (37700 * 0.2) + (87440 * 0.4) + (fromIntegral (taxableIncome - 125140) * 0.45)
+    in if taxableIncome <= basicRateUpperLimit 
+        then fromIntegral taxableIncome * basicTaxRate
+        else if taxableIncome <= higherRateUpperLimit
+            then (fromIntegral basicRateUpperLimit * basicTaxRate) + 
+                 (fromIntegral (taxableIncome - basicRateUpperLimit) * higherTaxRate)
+            else (fromIntegral basicRateUpperLimit * basicTaxRate) + 
+                 (fromIntegral (higherRateUpperLimit - basicRateUpperLimit) * higherTaxRate) + 
+                 (fromIntegral (taxableIncome - higherRateUpperLimit) * additionalTaxRate)
