@@ -25,7 +25,9 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      IncomeTax
+      NITax
+      StudentLoan
   other-modules:
       Paths_IncomeCalc
   autogen-modules:
@@ -62,6 +64,7 @@ test-suite IncomeCalc-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      IncomeCalc
+      HUnit
+    , IncomeCalc
     , base >=4.7 && <5
   default-language: Haskell2010
