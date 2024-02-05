@@ -10,5 +10,11 @@ calculateTaxableIncome :: Int -> Int
 calculateTaxableIncome x = 
     max 0 (x - round (calculatePersonalAllowance x))
 
-calculateIncomeTax :: Int -> Int
-calculateIncomeTax x = 0
+calculateIncomeTax :: Int -> Float
+calculateIncomeTax x = 
+    let taxableIncome = calculateTaxableIncome x
+    in if taxableIncome <= 37700 
+        then fromIntegral taxableIncome * 0.2
+        else if taxableIncome <= 125140
+            then (37700 * 0.2) + (fromIntegral (taxableIncome - 37700) * 0.4)
+            else (37700 * 0.2) + (87440 * 0.4) + (fromIntegral (taxableIncome - 125140) * 0.45)
