@@ -37,6 +37,14 @@ personalAllowanceTests = TestList [
     TestCase (assertEqual "Personal allowance well above threshold" 0 (calculatePersonalAllowance 130000))
     ]
 
+taxableIncomeTests:: Test
+taxableIncomeTests = TestList [
+    TestCase (assertEqual "Taxable income below threshold" 0 (calculateTaxableIncome 5000)),
+    TestCase (assertEqual "Taxable income within threshold" 12430 (calculateTaxableIncome 25000)),
+    TestCase (assertEqual "Taxable income above threshold" 117430 (calculateTaxableIncome 120000)),
+    TestCase (assertEqual "Taxable income well above threshold" 130000 (calculateTaxableIncome 130000))
+    ]
+
 incomeTaxTests :: Test
 incomeTaxTests = TestList [
     TestCase (assertEqual "Income tax below threshold" 0 (calculateIncomeTax 5000)),
