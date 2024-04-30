@@ -1,4 +1,4 @@
-module BinarySyntaxTree (
+module BinarySearchTree (
   BST(..), 
   Key, Value,
   MaybeValue(..), 

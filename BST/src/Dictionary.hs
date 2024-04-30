@@ -2,7 +2,7 @@ module Dictionary (Dictionary, empty, lookup, insert) where
 
 import Prelude hiding (lookup)
 
-import BinarySyntaxTree (
+import BinarySearchTree (
     BST(..), 
     MaybeValue(..), 
     Key, Value,

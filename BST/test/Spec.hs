@@ -5,7 +5,7 @@ import Test.Tasty.HUnit
 
 import Prelude hiding (lookup)
 
-import BinarySyntaxTree (MaybeValue(..), Key, Value)
+import BinarySearchTree (MaybeValue(..), Key, Value)
 
 import Dictionary (Dictionary, empty, lookup, insert)
 
