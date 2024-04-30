@@ -2,7 +2,8 @@ module BinarySyntaxTree (
   BST(..), 
   Key, Value,
   MaybeValue(..), 
-  lookupBST
+  lookupBST,
+  insertBST
 ) where
 
 type Key = Int
@@ -22,3 +23,12 @@ lookupBST soughtKey (InternalNode key item leftChild rightChild) =
     else if soughtKey < key
       then lookupBST soughtKey leftChild
       else lookupBST soughtKey rightChild
+
+insertBST :: Key -> Value -> BST -> BST
+insertBST key value Leaf = InternalNode key value Leaf Leaf
+insertBST key value (InternalNode nodeKey nodeValue leftChild rightChild) =
+  if key == nodeKey
+    then InternalNode key value leftChild rightChild
+    else if key < nodeKey
+      then InternalNode nodeKey nodeValue (insertBST key value leftChild) rightChild
+      else InternalNode nodeKey nodeValue leftChild (insertBST key value rightChild)
