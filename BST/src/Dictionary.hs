@@ -1,10 +1,15 @@
-module Dictionary (empty, lookup) where
+module Dictionary (Dictionary, empty, lookup) where
 
 import Prelude hiding (lookup)
 
-import BinarySyntaxTree (BST, Key, Value, MaybeValue, Leaf, lookupBST)
+import BinarySyntaxTree (
+    BST(..), 
+    MaybeValue(..), 
+    Key, Value,
+    lookupBST)
 
 data Dictionary = Dictionary BST
+    deriving (Show, Eq)
 
 empty :: Dictionary
 empty = Dictionary Leaf

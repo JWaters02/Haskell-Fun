@@ -1,16 +1,18 @@
-module BinarySyntaxTree (BST, Key, Value, MaybeValue, lookupBST) where
-
-import Prelude hiding (lookup)
+module BinarySyntaxTree (
+  BST(..), 
+  Key, Value,
+  MaybeValue(..), 
+  lookupBST
+) where
 
 type Key = Int
 type Value = String
 
 data BST = InternalNode Key Value BST BST | Leaf
+  deriving (Show, Eq)
 
-data MaybeBST = JustBST BST | NothingBST
-data MaybeKV = JustKV Key Value | NothingKV
 data MaybeValue = JustValue Value | NothingValue
-data MaybeKey = JustKey Key | NothingKey
+  deriving (Show, Eq)
 
 lookupBST :: Key -> BST -> MaybeValue
 lookupBST soughtKey Leaf = NothingValue

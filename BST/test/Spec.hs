@@ -3,7 +3,15 @@ import Test.Tasty
 import Test.Tasty.QuickCheck 
 import Test.Tasty.HUnit      
 
-import Dictionary (empty, lookup)
+import Prelude hiding (lookup)
+
+import BinarySyntaxTree (
+  BST(..), 
+  MaybeValue(..), 
+  Key, Value,
+  lookupBST)
+
+import Dictionary (Dictionary, empty, lookup)
 
 -------------------------------------------------------------
 

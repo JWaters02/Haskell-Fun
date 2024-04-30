@@ -58,5 +58,7 @@ tests:
     dependencies:
     - BST
     - HUnit
-    - Tasty
     - QuickCheck
+    - tasty
+    - tasty-hunit
+    - tasty-quickcheck
