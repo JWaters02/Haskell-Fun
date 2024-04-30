@@ -7,5 +7,5 @@ import qualified Luhn (enterBankCard)
 
 main :: IO ()
 -- main = Bill.calculateBill
--- main = Luhn.enterBankCard
-main = print(sqr 5)
+main = Luhn.enterBankCard
+-- main = print(sqr 5)
