@@ -1,4 +1,4 @@
-module Dictionary (Dictionary, empty, lookup, insert) where
+module Dictionary (Dictionary, empty, lookup, insert, delete) where
 
 import Prelude hiding (lookup)
 

@@ -37,4 +37,12 @@ insert key value (InternalNode nodeKey nodeValue leftChild rightChild) =
       else InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
 
 delete :: Key -> BST -> BST
-delete _ _ = error "delete not implemented yet"
+delete _ Leaf = Leaf
+delete key (InternalNode nodeKey nodeValue leftChild rightChild)
+  | key < nodeKey = InternalNode nodeKey nodeValue (delete key leftChild) rightChild
+  | key > nodeKey = InternalNode nodeKey nodeValue leftChild (delete key rightChild)
+  | isLeaf leftChild = rightChild
+  | isLeaf rightChild = leftChild
+  where
+    isLeaf Leaf = True
+    isLeaf _ = False
