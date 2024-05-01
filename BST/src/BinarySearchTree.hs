@@ -16,7 +16,7 @@ data MaybeValue = JustValue Value | NothingValue
   deriving (Show, Eq)
 
 lookupBST :: Key -> BST -> MaybeValue
-lookupBST soughtKey Leaf = NothingValue
+lookupBST _ Leaf = NothingValue
 lookupBST soughtKey (InternalNode key item leftChild rightChild) =
   if soughtKey == key
     then JustValue item
