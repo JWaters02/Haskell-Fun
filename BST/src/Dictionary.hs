@@ -1,4 +1,4 @@
-module Dictionary (Dictionary, empty, lookup, insert, delete) where
+module Dictionary (Dictionary, empty, lookup, insert, insertMultiple, delete) where
 
 import Prelude hiding (lookup)
 
@@ -16,6 +16,9 @@ lookup key (Dictionary bst) = BST.lookup key bst
 
 insert :: Key -> Value -> Dictionary -> Dictionary
 insert key value (Dictionary bst) = Dictionary (BST.insert key value bst)
+
+insertMultiple :: [(Key, Value)] -> Dictionary -> Dictionary
+insertMultiple pairs (Dictionary bst) = Dictionary (foldr (uncurry BST.insert) bst pairs)
 
 delete :: Key -> Dictionary -> Dictionary
 delete key (Dictionary bst) = Dictionary (BST.delete key bst)
