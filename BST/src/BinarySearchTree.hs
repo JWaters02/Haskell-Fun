@@ -20,21 +20,25 @@ data MaybeValue = JustValue Value | NothingValue
 
 lookup :: Key -> BST -> MaybeValue
 lookup _ Leaf = NothingValue
-lookup soughtKey (InternalNode key item leftChild rightChild) =
-  if soughtKey == key
-    then JustValue item
-    else if soughtKey < key
-      then lookup soughtKey leftChild
-      else lookup soughtKey rightChild
+lookup key (InternalNode nodeKey nodeValue leftChild rightChild)
+  | key == nodeKey = JustValue nodeValue
+  | key < nodeKey = lookup key leftChild
+  | otherwise = lookup key rightChild
 
 insert :: Key -> Value -> BST -> BST
 insert key value Leaf = InternalNode key value Leaf Leaf
-insert key value (InternalNode nodeKey nodeValue leftChild rightChild) =
-  if key == nodeKey
-    then InternalNode key value leftChild rightChild
-    else if key < nodeKey
-      then InternalNode nodeKey nodeValue (insert key value leftChild) rightChild
-      else InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
+insert key value (InternalNode nodeKey nodeValue leftChild rightChild)
+  | key == nodeKey = InternalNode key value leftChild rightChild
+  | key < nodeKey = InternalNode nodeKey nodeValue (insert key value leftChild) rightChild
+  | otherwise = InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
+
+isLeaf :: BST -> Bool
+isLeaf Leaf = True
+isLeaf _ = False
+
+maxNode :: BST -> (Key, Value)
+maxNode (InternalNode key value Leaf _) = (key, value)
+maxNode (InternalNode _ _ _ rightChild) = maxNode rightChild
 
 delete :: Key -> BST -> BST
 delete _ Leaf = Leaf
@@ -43,6 +47,6 @@ delete key (InternalNode nodeKey nodeValue leftChild rightChild)
   | key > nodeKey = InternalNode nodeKey nodeValue leftChild (delete key rightChild)
   | isLeaf leftChild = rightChild
   | isLeaf rightChild = leftChild
-  where
-    isLeaf Leaf = True
-    isLeaf _ = False
+  | otherwise = 
+    let (prevKey, prevValue) = maxNode leftChild
+    in InternalNode prevKey prevValue leftChild (delete prevKey rightChild)
