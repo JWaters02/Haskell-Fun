@@ -2,8 +2,10 @@ module BinarySearchTree (
   BST(..), 
   Key, Value,
   MaybeValue(..), 
+  MaybeKV(..),
   lookup,
   insert,
+  output,
   delete
 ) where
 
@@ -13,9 +15,12 @@ type Key = Int
 type Value = String
 
 data BST = InternalNode Key Value BST BST | Leaf
-  deriving (Show, Eq)
+  deriving (Show, Ord, Eq)
 
 data MaybeValue = JustValue Value | NothingValue
+  deriving (Show, Eq)
+
+data MaybeKV = JustKV Key Value | NothingKV
   deriving (Show, Eq)
 
 lookup :: Key -> BST -> MaybeValue
@@ -31,6 +36,9 @@ insert key value (InternalNode nodeKey nodeValue leftChild rightChild)
   | key == nodeKey = InternalNode key value leftChild rightChild
   | key < nodeKey = InternalNode nodeKey nodeValue (insert key value leftChild) rightChild
   | otherwise = InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
+
+output :: BST -> [MaybeKV]
+output _ = error "Not implemented"
 
 isLeaf :: BST -> Bool
 isLeaf Leaf = True
