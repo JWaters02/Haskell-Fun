@@ -2,9 +2,12 @@ module BinarySearchTree (
   BST(..), 
   Key, Value,
   MaybeValue(..), 
-  lookupBST,
-  insertBST
+  lookup,
+  insert,
+  delete
 ) where
+
+import Prelude hiding (lookup)
 
 type Key = Int
 type Value = String
@@ -15,20 +18,23 @@ data BST = InternalNode Key Value BST BST | Leaf
 data MaybeValue = JustValue Value | NothingValue
   deriving (Show, Eq)
 
-lookupBST :: Key -> BST -> MaybeValue
-lookupBST _ Leaf = NothingValue
-lookupBST soughtKey (InternalNode key item leftChild rightChild) =
+lookup :: Key -> BST -> MaybeValue
+lookup _ Leaf = NothingValue
+lookup soughtKey (InternalNode key item leftChild rightChild) =
   if soughtKey == key
     then JustValue item
     else if soughtKey < key
-      then lookupBST soughtKey leftChild
-      else lookupBST soughtKey rightChild
+      then lookup soughtKey leftChild
+      else lookup soughtKey rightChild
 
-insertBST :: Key -> Value -> BST -> BST
-insertBST key value Leaf = InternalNode key value Leaf Leaf
-insertBST key value (InternalNode nodeKey nodeValue leftChild rightChild) =
+insert :: Key -> Value -> BST -> BST
+insert key value Leaf = InternalNode key value Leaf Leaf
+insert key value (InternalNode nodeKey nodeValue leftChild rightChild) =
   if key == nodeKey
     then InternalNode key value leftChild rightChild
     else if key < nodeKey
-      then InternalNode nodeKey nodeValue (insertBST key value leftChild) rightChild
-      else InternalNode nodeKey nodeValue leftChild (insertBST key value rightChild)
+      then InternalNode nodeKey nodeValue (insert key value leftChild) rightChild
+      else InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
+
+delete :: Key -> BST -> BST
+delete _ _ = error "delete not implemented yet"

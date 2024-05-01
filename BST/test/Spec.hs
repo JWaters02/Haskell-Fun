@@ -54,14 +54,14 @@ test_insert_multiple_same_key_lookup :: Assertion
 test_insert_multiple_same_key_lookup = assertEqual "" (JustValue "foo") (lookup 1 (insert 1 "foo" (insert 1 "bar" empty)))
 
 test_insert_multiple_unique_key_lookup :: Assertion
-test_insert_multiple_unique_key_lookup = assertEqual "" (JustValue "foo") (lookup 1 (insert 1 "foo" (insert 2 "bar" empty)))
+test_insert_multiple_unique_key_lookup = assertEqual "" (JustValue "bar") (lookup 2 (insert 1 "foo" (insert 2 "bar" empty)))
 
 hunit_tests :: TestTree
 hunit_tests = testGroup "HUnit tests"
   [ 
     testCase "lookup on empty dictionary" test_empty_lookup,
     testCase "insert then lookup on dictionary" test_insert_lookup,
-    testCase "insert multiple same key then lookup on dictionary" test_insert_multiple_same_key_lookup
+    testCase "insert multiple same key then lookup on dictionary" test_insert_multiple_same_key_lookup,
     testCase "insert multiple unique key then lookup on dictionary" test_insert_multiple_unique_key_lookup
   ]
 
