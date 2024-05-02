@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 import Test.QuickCheck hiding (output)
 import Test.Tasty            
 import Test.Tasty.QuickCheck hiding (output)
@@ -10,11 +12,15 @@ import BinarySearchTree (MaybeValue(..))
 
 import Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete)
 
-instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (Dictionary k v) where
+instance Arbitrary (Dictionary Int String) where
   arbitrary = do
-    key <- arbitrary
-    value <- arbitrary
-    frequency [(1, return empty), (1, return (insert key value empty))]
+    key <- arbitrary :: Gen Int
+    value <- arbitrary :: Gen String
+    frequency [(1, return empty), (9, return (insert key value empty))]
+
+type IntStringDict = Dictionary Int String
+emptyIntStringDict :: IntStringDict
+emptyIntStringDict = empty
 
 -------------------------------------------------------------
 
@@ -27,44 +33,44 @@ generateUniquePairs = nubBy (\x y -> fst x == fst y)
 
 -- property-based tests
 
-prop_empty :: (Ord k, Arbitrary k) => k -> Bool
-prop_empty key = 
-  lookup key (empty :: Dictionary k v) == NothingValue
+prop_empty :: Int -> Bool
+prop_empty key =
+  lookup key emptyIntStringDict == NothingValue
 
-prop_multiple_empty :: (Ord k, Arbitrary k) => [k] -> Bool
-prop_multiple_empty keys = 
-  all (\key -> lookup key (empty :: Dictionary k v) == NothingValue) keys
+prop_multiple_empty :: [Int] -> Bool
+prop_multiple_empty keys =
+  all (\key -> lookup key emptyIntStringDict == NothingValue) keys
 
-prop_insert :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => k -> v -> Dictionary k v -> Bool
-prop_insert key value dict = 
+prop_insert :: Int -> String -> Dictionary Int String -> Bool
+prop_insert key value dict =
   lookup key (insert key value dict) == JustValue value
 
-prop_insert_multiple :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => [(k, v)] -> Bool
+prop_insert_multiple :: [(Int, String)] -> Bool
 prop_insert_multiple keyValues = 
   let uniqueKeyValues = generateUniquePairs keyValues
-  in all (\(key, value) -> lookup key (insert key value (empty :: Dictionary k v)) == JustValue value) uniqueKeyValues
+  in all (\(key, value) -> lookup key (insert key value empty) == JustValue value) uniqueKeyValues
 
-prop_output_single :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => k -> v -> Dictionary k v -> Bool
+prop_output_single :: Int -> String -> Dictionary Int String -> Bool
 prop_output_single key value dict = 
   let newDict = insert key value dict
       outputList = output newDict
   in any (\(k, v) -> k == key && v == value) outputList
 
-prop_output_multiple :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => [(k, v)] -> Dictionary k v -> Bool
+prop_output_multiple :: [(Int, String)] -> Dictionary Int String -> Bool
 prop_output_multiple pairs dict = 
   let uniquePairs = generateUniquePairs pairs
       newDict = insertMultiple uniquePairs dict
       outputList = output newDict
   in all (\(key, value) -> any (\(k, v) -> k == key && v == value) outputList) uniquePairs
 
-prop_delete :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => k -> v -> Dictionary k v -> Bool
+prop_delete :: Int -> String -> Dictionary Int String -> Bool
 prop_delete key value dict = 
   let newDict = insert key value dict
   in lookup key (delete key newDict) == NothingValue
 
-prop_delete_multiple :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => [(k, v)] -> Bool
+prop_delete_multiple :: [(Int, String)] -> Bool
 prop_delete_multiple keyValues = 
-  all (\(key, value) -> lookup key (delete key (insert key value empty :: Dictionary k v)) == NothingValue) keyValues
+  all (\(key, value) -> lookup key (delete key (insert key value empty)) == NothingValue) keyValues
 
 qcheck_tests :: TestTree
 qcheck_tests = testGroup "QuickCheck tests"
@@ -82,11 +88,6 @@ qcheck_tests = testGroup "QuickCheck tests"
 -------------------------------------------------------------
 
 -- unit tests
-
-type IntStringDict = Dictionary Int String
-
-emptyIntStringDict :: IntStringDict
-emptyIntStringDict = empty
 
 singleDict :: Dictionary Int String
 singleDict = insert 1 "foo" emptyIntStringDict
