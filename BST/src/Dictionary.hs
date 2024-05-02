@@ -1,9 +1,9 @@
-module Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete) where
+module Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete, deleteOnPredicate) where
 
-import Prelude hiding (lookup)
+import Prelude hiding (lookup, pred)
 
 import BinarySearchTree (BST(..), MaybeValue(..))
-import qualified BinarySearchTree as BST (lookup, insert, output, delete)
+import qualified BinarySearchTree as BST (lookup, insert, output, delete, deleteOnPredicate)
 
 data Dictionary k v = Dictionary (BST k v)
     deriving (Show, Ord, Eq)
@@ -25,3 +25,6 @@ output (Dictionary bst) = BST.output bst
 
 delete :: (Ord k) => k -> Dictionary k v -> Dictionary k v
 delete key (Dictionary bst) = Dictionary (BST.delete key bst)
+
+deleteOnPredicate :: (Ord k) => (k -> v -> Bool) -> Dictionary k v -> Dictionary k v
+deleteOnPredicate pred (Dictionary bst) = Dictionary (BST.deleteOnPredicate pred bst)

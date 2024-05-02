@@ -10,15 +10,15 @@ import Data.List (nubBy)
 
 import BinarySearchTree (MaybeValue(..))
 
-import Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete)
+import Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete, deleteOnPredicate)
 
 type Key = Int
 type Value = String
 
 instance Arbitrary (Dictionary Key Value) where
   arbitrary = do
-    key <- arbitrary :: Gen Key
-    value <- arbitrary :: Gen Value
+    key <- arbitrary
+    value <- arbitrary
     frequency [(1, return empty), (9, return (insert key value empty))]
 
 type IntStringDict = Dictionary Int String
@@ -79,6 +79,13 @@ prop_delete_multiple :: [(Key, Value)] -> Bool
 prop_delete_multiple keyValues = 
   all (\(key, value) -> lookup key (delete key (insert key value empty)) == NothingValue) keyValues
 
+prop_delete_on_predicate :: [(Key, Value)] -> Bool
+prop_delete_on_predicate keyValues = 
+  let uniqueKeyValues = generateUniquePairs keyValues
+      dict = insertMultiple uniqueKeyValues empty
+      newDict = deleteOnPredicate (\_ _ -> True) dict
+  in all (\(key, _) -> lookup key newDict == NothingValue) uniqueKeyValues
+
 qcheck_tests :: TestTree
 qcheck_tests = testGroup "QuickCheck tests"
   [ 
@@ -89,7 +96,8 @@ qcheck_tests = testGroup "QuickCheck tests"
     testProperty "output single pair" prop_output_single,
     testProperty "output multiple pairs" prop_output_multiple,
     testProperty "insert then delete then lookup" prop_delete,
-    testProperty "insert multiple then delete then lookup" prop_delete_multiple
+    testProperty "insert multiple then delete then lookup" prop_delete_multiple,
+    testProperty "delete on predicate removes all" prop_delete_on_predicate
   ]
 
 -------------------------------------------------------------
@@ -140,6 +148,16 @@ test_delete_root_two_children =
   insertMultiple [(1, "apple"), (3, "cherry")] emptyIntStringDict @?= 
     delete 2 (insertMultiple [(2, "banana"), (1, "apple"), (3, "cherry")] emptyIntStringDict)
 
+test_delete_on_predicate_remove_odd :: Assertion
+test_delete_on_predicate_remove_odd = 
+  insert 2 "banana" emptyIntStringDict @?= 
+    deleteOnPredicate (\k _ -> odd k) (insertMultiple [(1, "apple"), (2, "banana"), (3, "cherry")] emptyIntStringDict)
+
+test_delete_on_predicate_remove_none :: Assertion
+test_delete_on_predicate_remove_none = 
+  insertMultiple [(1, "apple"), (2, "banana"), (3, "cherry")] emptyIntStringDict @?= 
+    deleteOnPredicate (\_ _ -> False) (insertMultiple [(1, "apple"), (2, "banana"), (3, "cherry")] emptyIntStringDict)
+
 hunit_tests :: TestTree
 hunit_tests = testGroup "HUnit tests"
   [ 
@@ -151,7 +169,9 @@ hunit_tests = testGroup "HUnit tests"
     testCase "delete empty dictionary" test_delete_empty,
     testCase "insert then delete wrong key then lookup" test_delete_wrong,
     testCase "delete root with one child" test_delete_root_one_child,
-    testCase "delete root with two children" test_delete_root_two_children
+    testCase "delete root with two children" test_delete_root_two_children,
+    testCase "delete on predicate removes odd keys" test_delete_on_predicate_remove_odd,
+    testCase "delete on predicate removes none" test_delete_on_predicate_remove_none
   ]
 
 -------------------------------------------------------------

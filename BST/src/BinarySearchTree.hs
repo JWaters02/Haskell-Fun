@@ -4,7 +4,8 @@ module BinarySearchTree (
   lookup,
   insert,
   output,
-  delete
+  delete, 
+  deleteOnPredicate
 ) where
 
 import Prelude hiding (lookup)
@@ -52,3 +53,9 @@ delete key (InternalNode nodeKey nodeValue leftChild rightChild)
   | otherwise = 
     let (prevKey, prevValue) = maxNode leftChild
     in InternalNode prevKey prevValue leftChild (delete prevKey rightChild)
+
+deleteOnPredicate :: (Ord k) => (k -> v -> Bool) -> BST k v -> BST k v
+deleteOnPredicate _ Leaf = Leaf
+deleteOnPredicate pred (InternalNode key value leftChild rightChild)
+  | pred key value = delete key (deleteOnPredicate pred leftChild)
+  | otherwise = InternalNode key value (deleteOnPredicate pred leftChild) (deleteOnPredicate pred rightChild)
