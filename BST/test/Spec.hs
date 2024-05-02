@@ -12,63 +12,70 @@ import BinarySearchTree (MaybeValue(..))
 
 import Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete)
 
-instance Arbitrary (Dictionary Int String) where
+type Key = Int
+type Value = String
+
+instance Arbitrary (Dictionary Key Value) where
   arbitrary = do
-    key <- arbitrary :: Gen Int
-    value <- arbitrary :: Gen String
+    key <- arbitrary :: Gen Key
+    value <- arbitrary :: Gen Value
     frequency [(1, return empty), (9, return (insert key value empty))]
 
 type IntStringDict = Dictionary Int String
 emptyIntStringDict :: IntStringDict
 emptyIntStringDict = empty
 
+type CharIntDict = Dictionary Char Int
+emptyCharIntDict :: CharIntDict
+emptyCharIntDict = empty
+
 -------------------------------------------------------------
 
 -- helper functions
 
-generateUniquePairs :: (Eq k, Arbitrary k, Arbitrary v) => [(k, v)] -> [(k, v)]
+generateUniquePairs :: (Eq k) => [(k, v)] -> [(k, v)]
 generateUniquePairs = nubBy (\x y -> fst x == fst y)
 
 -------------------------------------------------------------
 
 -- property-based tests
 
-prop_empty :: Int -> Bool
+prop_empty :: Key -> Bool
 prop_empty key =
   lookup key emptyIntStringDict == NothingValue
 
-prop_multiple_empty :: [Int] -> Bool
+prop_multiple_empty :: [Key] -> Bool
 prop_multiple_empty keys =
   all (\key -> lookup key emptyIntStringDict == NothingValue) keys
 
-prop_insert :: Int -> String -> Dictionary Int String -> Bool
+prop_insert :: Key -> String -> Dictionary Key Value -> Bool
 prop_insert key value dict =
   lookup key (insert key value dict) == JustValue value
 
-prop_insert_multiple :: [(Int, String)] -> Bool
+prop_insert_multiple :: [(Key, Value)] -> Bool
 prop_insert_multiple keyValues = 
   let uniqueKeyValues = generateUniquePairs keyValues
   in all (\(key, value) -> lookup key (insert key value empty) == JustValue value) uniqueKeyValues
 
-prop_output_single :: Int -> String -> Dictionary Int String -> Bool
+prop_output_single :: Key -> Value -> Dictionary Key Value -> Bool
 prop_output_single key value dict = 
   let newDict = insert key value dict
       outputList = output newDict
   in any (\(k, v) -> k == key && v == value) outputList
 
-prop_output_multiple :: [(Int, String)] -> Dictionary Int String -> Bool
+prop_output_multiple :: [(Key, Value)] -> Dictionary Key Value -> Bool
 prop_output_multiple pairs dict = 
   let uniquePairs = generateUniquePairs pairs
       newDict = insertMultiple uniquePairs dict
       outputList = output newDict
   in all (\(key, value) -> any (\(k, v) -> k == key && v == value) outputList) uniquePairs
 
-prop_delete :: Int -> String -> Dictionary Int String -> Bool
+prop_delete :: Key -> Value -> Dictionary Key Value -> Bool
 prop_delete key value dict = 
   let newDict = insert key value dict
   in lookup key (delete key newDict) == NothingValue
 
-prop_delete_multiple :: [(Int, String)] -> Bool
+prop_delete_multiple :: [(Key, Value)] -> Bool
 prop_delete_multiple keyValues = 
   all (\(key, value) -> lookup key (delete key (insert key value empty)) == NothingValue) keyValues
 
@@ -111,6 +118,10 @@ test_insert_multiple_unique_key :: Assertion
 test_insert_multiple_unique_key = 
   assertEqual "" (JustValue "bar") (lookup 2 duoDict)
 
+test_insert_multiple_unique_key_char :: Assertion
+test_insert_multiple_unique_key_char = 
+  assertEqual "" (JustValue 2) (lookup 'b' (insertMultiple [('a', 1), ('b', 2)] emptyCharIntDict))
+
 test_delete_empty :: Assertion
 test_delete_empty = 
   assertEqual "" NothingValue (lookup 1 (delete 1 emptyIntStringDict))
@@ -136,6 +147,7 @@ hunit_tests = testGroup "HUnit tests"
     testCase "insert then lookup wrong key" test_lookup_wrong,
     testCase "insert multiple same key then lookup" test_insert_multiple_same_key,
     testCase "insert multiple unique key then lookup" test_insert_multiple_unique_key,
+    testCase "insert multiple unique key char then lookup" test_insert_multiple_unique_key_char,
     testCase "delete empty dictionary" test_delete_empty,
     testCase "insert then delete wrong key then lookup" test_delete_wrong,
     testCase "delete root with one child" test_delete_root_one_child,
