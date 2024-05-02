@@ -6,11 +6,11 @@ import Test.Tasty.HUnit
 import Prelude hiding (lookup)
 import Data.List (nubBy)
 
-import BinarySearchTree (MaybeValue(..), Key, Value)
+import BinarySearchTree (MaybeValue(..))
 
 import Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete)
 
-instance Arbitrary Dictionary where
+instance (Arbitrary k, Arbitrary v, Ord k) => Arbitrary (Dictionary k v) where
   arbitrary = do
     key <- arbitrary
     value <- arbitrary
@@ -20,50 +20,51 @@ instance Arbitrary Dictionary where
 
 -- helper functions
 
-generateUniquePairs :: [(Key, Value)] -> [(Key, Value)]
+generateUniquePairs :: (Eq k, Arbitrary k, Arbitrary v) => [(k, v)] -> [(k, v)]
 generateUniquePairs = nubBy (\x y -> fst x == fst y)
 
 -------------------------------------------------------------
 
 -- property-based tests
 
-prop_empty :: Key -> Bool
+prop_empty :: (Ord k, Arbitrary k) => k -> Bool
 prop_empty key = 
-  lookup key empty == NothingValue
+  lookup key (empty :: Dictionary k v) == NothingValue
 
-prop_multiple_empty :: [Key] -> Bool
+prop_multiple_empty :: (Ord k, Arbitrary k) => [k] -> Bool
 prop_multiple_empty keys = 
-  all (\key -> lookup key empty == NothingValue) keys
+  all (\key -> lookup key (empty :: Dictionary k v) == NothingValue) keys
 
-prop_insert :: Key -> Value -> Dictionary -> Bool
+prop_insert :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => k -> v -> Dictionary k v -> Bool
 prop_insert key value dict = 
   lookup key (insert key value dict) == JustValue value
 
-prop_insert_multiple :: [(Key, Value)] -> Bool
+prop_insert_multiple :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => [(k, v)] -> Bool
 prop_insert_multiple keyValues = 
   let uniqueKeyValues = generateUniquePairs keyValues
-  in all (\(key, value) -> lookup key (insert key value empty) == JustValue value) uniqueKeyValues
+  in all (\(key, value) -> lookup key (insert key value (empty :: Dictionary k v)) == JustValue value) uniqueKeyValues
 
-prop_output_single :: Key -> Value -> Dictionary -> Bool
+prop_output_single :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => k -> v -> Dictionary k v -> Bool
 prop_output_single key value dict = 
   let newDict = insert key value dict
       outputList = output newDict
   in any (\(k, v) -> k == key && v == value) outputList
 
-prop_output_multiple :: [(Key, Value)] -> Dictionary -> Bool
+prop_output_multiple :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => [(k, v)] -> Dictionary k v -> Bool
 prop_output_multiple pairs dict = 
   let uniquePairs = generateUniquePairs pairs
-      newDict = foldr (uncurry insert) dict uniquePairs
+      newDict = insertMultiple uniquePairs dict
       outputList = output newDict
-  in all (\(k1, v1) -> any (\(k2, v2) -> k1 == k2 && v1 == v2) outputList) uniquePairs
+  in all (\(key, value) -> any (\(k, v) -> k == key && v == value) outputList) uniquePairs
 
-prop_delete :: Key -> Value -> Dictionary -> Bool
+prop_delete :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => k -> v -> Dictionary k v -> Bool
 prop_delete key value dict = 
-  lookup key (delete key (insert key value dict)) == NothingValue
+  let newDict = insert key value dict
+  in lookup key (delete key newDict) == NothingValue
 
-prop_delete_multiple :: [(Key, Value)] -> Bool
+prop_delete_multiple :: (Ord k, Arbitrary k, Arbitrary v, Eq v) => [(k, v)] -> Bool
 prop_delete_multiple keyValues = 
-  all (\(key, value) -> lookup key (delete key (insert key value empty)) == NothingValue) keyValues
+  all (\(key, value) -> lookup key (delete key (insert key value empty :: Dictionary k v)) == NothingValue) keyValues
 
 qcheck_tests :: TestTree
 qcheck_tests = testGroup "QuickCheck tests"
@@ -82,15 +83,20 @@ qcheck_tests = testGroup "QuickCheck tests"
 
 -- unit tests
 
-singleDict :: Dictionary
-singleDict = insert 1 "foo" empty
+type IntStringDict = Dictionary Int String
 
-duoDict :: Dictionary
-duoDict = insertMultiple [(1, "foo"), (2, "bar")] empty
+emptyIntStringDict :: IntStringDict
+emptyIntStringDict = empty
+
+singleDict :: Dictionary Int String
+singleDict = insert 1 "foo" emptyIntStringDict
+
+duoDict :: Dictionary Int String
+duoDict = insertMultiple [(1, "foo"), (2, "bar")] emptyIntStringDict
 
 test_output_empty :: Assertion
 test_output_empty = 
-  assertEqual "" [] (output empty)
+  assertEqual "" [] (output emptyIntStringDict)
 
 test_lookup_wrong :: Assertion
 test_lookup_wrong = 
@@ -106,7 +112,7 @@ test_insert_multiple_unique_key =
 
 test_delete_empty :: Assertion
 test_delete_empty = 
-  assertEqual "" NothingValue (lookup 1 (delete 1 empty))
+  assertEqual "" NothingValue (lookup 1 (delete 1 emptyIntStringDict))
 
 test_delete_wrong :: Assertion
 test_delete_wrong = 
@@ -114,13 +120,13 @@ test_delete_wrong =
 
 test_delete_root_one_child :: Assertion
 test_delete_root_one_child = 
-  insert 2 "bar" empty @?= 
+  insert 2 "bar" emptyIntStringDict @?= 
     delete 1 duoDict
 
 test_delete_root_two_children :: Assertion
 test_delete_root_two_children = 
-  insertMultiple [(1, "apple"), (3, "cherry")] empty @?= 
-    delete 2 (insertMultiple [(2, "banana"), (1, "apple"), (3, "cherry")] empty)
+  insertMultiple [(1, "apple"), (3, "cherry")] emptyIntStringDict @?= 
+    delete 2 (insertMultiple [(2, "banana"), (1, "apple"), (3, "cherry")] emptyIntStringDict)
 
 hunit_tests :: TestTree
 hunit_tests = testGroup "HUnit tests"
