@@ -1,6 +1,5 @@
 module BinarySearchTree (
-  BST(..), 
-  Key, Value,
+  BST(..),
   MaybeValue(..), 
   lookup,
   insert,
@@ -10,43 +9,40 @@ module BinarySearchTree (
 
 import Prelude hiding (lookup)
 
-type Key = Int
-type Value = String
-
-data BST = InternalNode Key Value BST BST | Leaf
+data BST k v = InternalNode k v (BST k v) (BST k v) | Leaf
   deriving (Show, Ord, Eq)
 
-data MaybeValue = JustValue Value | NothingValue
+data MaybeValue v = JustValue v | NothingValue
   deriving (Show, Eq)
 
-lookup :: Key -> BST -> MaybeValue
+lookup :: (Ord k) => k -> BST k v -> MaybeValue v
 lookup _ Leaf = NothingValue
 lookup key (InternalNode nodeKey nodeValue leftChild rightChild)
   | key == nodeKey = JustValue nodeValue
   | key < nodeKey = lookup key leftChild
   | otherwise = lookup key rightChild
 
-insert :: Key -> Value -> BST -> BST
+insert :: (Ord k) => k -> v -> BST k v -> BST k v
 insert key value Leaf = InternalNode key value Leaf Leaf
 insert key value (InternalNode nodeKey nodeValue leftChild rightChild)
   | key == nodeKey = InternalNode key value leftChild rightChild
   | key < nodeKey = InternalNode nodeKey nodeValue (insert key value leftChild) rightChild
   | otherwise = InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
 
-output :: BST -> [(Key, Value)]
+output :: BST k v -> [(k, v)]
 output Leaf = []
 output (InternalNode key value leftChild rightChild) = 
   output leftChild ++ [(key, value)] ++ output rightChild
 
-isLeaf :: BST -> Bool
+isLeaf :: BST k v -> Bool
 isLeaf Leaf = True
 isLeaf _ = False
 
-maxNode :: BST -> (Key, Value)
+maxNode :: BST k v -> (k, v)
 maxNode (InternalNode key value Leaf _) = (key, value)
 maxNode (InternalNode _ _ _ rightChild) = maxNode rightChild
 
-delete :: Key -> BST -> BST
+delete :: (Ord k) => k -> BST k v -> BST k v
 delete _ Leaf = Leaf
 delete key (InternalNode nodeKey nodeValue leftChild rightChild)
   | key < nodeKey = InternalNode nodeKey nodeValue (delete key leftChild) rightChild
