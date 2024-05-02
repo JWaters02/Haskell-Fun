@@ -4,8 +4,9 @@ import Test.Tasty.QuickCheck hiding (output)
 import Test.Tasty.HUnit      
 
 import Prelude hiding (lookup)
+import Data.List (nubBy)
 
-import BinarySearchTree (MaybeValue(..), MaybeKV(..), Key, Value)
+import BinarySearchTree (MaybeValue(..), Key, Value)
 
 import Dictionary (Dictionary, empty, lookup, insert, insertMultiple, output, delete)
 
@@ -14,6 +15,13 @@ instance Arbitrary Dictionary where
     key <- arbitrary
     value <- arbitrary
     frequency [(1, return empty), (1, return (insert key value empty))]
+
+-------------------------------------------------------------
+
+-- helper functions
+
+generateUniquePairs :: [(Key, Value)] -> [(Key, Value)]
+generateUniquePairs = nubBy (\x y -> fst x == fst y)
 
 -------------------------------------------------------------
 
@@ -27,23 +35,27 @@ prop_multiple_empty :: [Key] -> Bool
 prop_multiple_empty keys = 
   all (\key -> lookup key empty == NothingValue) keys
 
-prop_output_empty :: Bool
-prop_output_empty = 
-  output empty == []
-
 prop_insert :: Key -> Value -> Dictionary -> Bool
 prop_insert key value dict = 
   lookup key (insert key value dict) == JustValue value
 
 prop_insert_multiple :: [(Key, Value)] -> Bool
 prop_insert_multiple keyValues = 
-  all (\(key, value) -> lookup key (insert key value empty) == JustValue value) keyValues
+  let uniqueKeyValues = generateUniquePairs keyValues
+  in all (\(key, value) -> lookup key (insert key value empty) == JustValue value) uniqueKeyValues
 
-prop_output_insert :: Key -> Value -> Dictionary -> Bool
-prop_output_insert key value dict = 
+prop_output_single :: Key -> Value -> Dictionary -> Bool
+prop_output_single key value dict = 
   let newDict = insert key value dict
       outputList = output newDict
-  in any (\(JustKV k v) -> k == key && v == value) outputList
+  in any (\(k, v) -> k == key && v == value) outputList
+
+prop_output_multiple :: [(Key, Value)] -> Dictionary -> Bool
+prop_output_multiple pairs dict = 
+  let uniquePairs = generateUniquePairs pairs
+      newDict = foldr (uncurry insert) dict uniquePairs
+      outputList = output newDict
+  in all (\(k1, v1) -> any (\(k2, v2) -> k1 == k2 && v1 == v2) outputList) uniquePairs
 
 prop_delete :: Key -> Value -> Dictionary -> Bool
 prop_delete key value dict = 
@@ -53,24 +65,17 @@ prop_delete_multiple :: [(Key, Value)] -> Bool
 prop_delete_multiple keyValues = 
   all (\(key, value) -> lookup key (delete key (insert key value empty)) == NothingValue) keyValues
 
-prop_output_delete :: Key -> Value -> Dictionary -> Bool
-prop_output_delete key value dict = 
-  let newDict = delete key (insert key value dict)
-      outputList = output newDict
-  in all (\(JustKV k _) -> k /= key) outputList
-
 qcheck_tests :: TestTree
 qcheck_tests = testGroup "QuickCheck tests"
   [ 
     testProperty "lookup on empty dictionary" prop_empty,
     testProperty "multiple lookups on empty dictionary" prop_multiple_empty,
-    testProperty "output of empty dictionary" prop_output_empty,
     testProperty "insert then lookup" prop_insert,
     testProperty "insert multiple then lookup" prop_insert_multiple,
-    testProperty "output of insert" prop_output_insert,
+    testProperty "output single pair" prop_output_single,
+    testProperty "output multiple pairs" prop_output_multiple,
     testProperty "insert then delete then lookup" prop_delete,
-    testProperty "insert multiple then delete then lookup" prop_delete_multiple,
-    testProperty "output of delete" prop_output_delete
+    testProperty "insert multiple then delete then lookup" prop_delete_multiple
   ]
 
 -------------------------------------------------------------
@@ -82,6 +87,10 @@ singleDict = insert 1 "foo" empty
 
 duoDict :: Dictionary
 duoDict = insertMultiple [(1, "foo"), (2, "bar")] empty
+
+test_output_empty :: Assertion
+test_output_empty = 
+  assertEqual "" [] (output empty)
 
 test_lookup_wrong :: Assertion
 test_lookup_wrong = 
@@ -116,6 +125,7 @@ test_delete_root_two_children =
 hunit_tests :: TestTree
 hunit_tests = testGroup "HUnit tests"
   [ 
+    testCase "output of empty dictionary" test_output_empty,
     testCase "insert then lookup wrong key" test_lookup_wrong,
     testCase "insert multiple same key then lookup" test_insert_multiple_same_key,
     testCase "insert multiple unique key then lookup" test_insert_multiple_unique_key,
