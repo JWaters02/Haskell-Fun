@@ -34,6 +34,7 @@ insert key value (InternalNode nodeKey nodeValue leftChild rightChild)
   | otherwise = InternalNode nodeKey nodeValue leftChild (insert key value rightChild)
 
 output :: BST -> [(Key, Value)]
+output Leaf = []
 output (InternalNode key value leftChild rightChild) = 
   output leftChild ++ [(key, value)] ++ output rightChild
 
